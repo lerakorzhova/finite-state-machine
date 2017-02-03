@@ -1,59 +1,86 @@
 class FSM {
-    /**
-     * Creates new FSM instance.
-     * @param config
-     */
-    constructor(config) {}
+    constructor(config) {
+        if (!config) {
+            this.initial = null;
+            this.states = null;
+        }
+        this.initial = config.initial;
+        this.states = config.states;
+        this.activeState = this.initial;
+        this.stackOfStates = [];
+        this.stackOfStates.push(this.initial);
+        this.steps = 0;
+    }
+    getState() {
+        return this.activeState;
+    }
+    changeState(state) {
+        for (var key in this.states) {
+            if (key == state) {
+                this.activeState = state;
+                this.steps++;
+                this.stackOfStates.push(state);
+                return this.activeState;
+            }
+        }
+        throw new Error("Error");
+    }
+    reset() {
+        this.activeState = this.initial;
+    }
+    trigger(event) {
+        for (var state in this.states) {
+            if (state === this.activeState) {
+                for (var key in this.states[state].transitions) {
+                    if (key === event) {
+                        this.activeState = this.states[state].transitions[key];
+                        this.steps++;
+                        this.stackOfStates.push(this.states[state].transitions[key]);
+                        return this.activeState;
+                    }
+                }
+            }
+        }
+        throw new Error();
+    }
+    getStates(event) {
+        var stateArr = [];
 
-    /**
-     * Returns active state.
-     * @returns {String}
-     */
-    getState() {}
+        if (!event) {
+            for (var state in this.states) {
+                stateArr.push(state);
+            }
+        }
 
-    /**
-     * Goes to specified state.
-     * @param state
-     */
-    changeState(state) {}
+        for (var state in this.states) {
+            for (var transition in this.states[state].transitions) {
+                if (transition === event) {
+                    stateArr.push(state);
+                }
+            }
+        }
 
-    /**
-     * Changes state according to event transition rules.
-     * @param event
-     */
-    trigger(event) {}
+        return stateArr;
+    }
+    undo() {
+        if (this.steps !== 0) {
+            this.steps--;
+            this.activeState = this.stackOfStates[this.steps];
+            return true;
+        } else return false;
+    }
 
-    /**
-     * Resets FSM state to initial.
-     */
-    reset() {}
+    redo() {
+        if (this.stackOfStates[this.stackOfStates.length - 1] !== this.activeState) {
+            this.steps++;
+            this.activeState = this.stackOfStates[this.steps];
+            return true;
+        } else return false;
+    }
 
-    /**
-     * Returns an array of states for which there are specified event transition rules.
-     * Returns all states if argument is undefined.
-     * @param event
-     * @returns {Array}
-     */
-    getStates(event) {}
-
-    /**
-     * Goes back to previous state.
-     * Returns false if undo is not available.
-     * @returns {Boolean}
-     */
-    undo() {}
-
-    /**
-     * Goes redo to state.
-     * Returns false if redo is not available.
-     * @returns {Boolean}
-     */
-    redo() {}
-
-    /**
-     * Clears transition history
-     */
-    clearHistory() {}
+    clearHistory() {
+        this.steps = 0;
+    }
 }
 
 module.exports = FSM;
